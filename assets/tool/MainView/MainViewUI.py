@@ -136,8 +136,24 @@ class MainViewUI(wx.ScrolledWindow):
 	def runGame(self, event = None):
 		pyExe = os.path.abspath(os.path.join(_GG("g_PythonPath"), "python.exe"));
 		toolPath = GetPathByRelativePath("../", self._curPath);
-		runFile = os.path.abspath(os.path.join(toolPath, self.getFile(toolPath, "run")));
-		os.system(" ".join([pyExe, runFile]));
+		mainFileName = self.getFile(toolPath, "main");
+		# 更新run.bat文件
+		runFilePath = VerifyPath(os.path.join(toolPath, "run.bat"));
+		if os.path.exists(runFilePath):
+			content = "";
+			with open(runFilePath, "r", encoding = "utf-8") as f:
+				for line in f.readlines():
+					if re.search("set pyexe.*=.*", line):
+						line = "set pyexe=" + VerifyPath(pyExe) + "\n";
+					elif re.search("set pjfile.*=.*", line):
+						line = "set pjfile=" + VerifyPath(toolPath) + "\n";
+					elif re.search("set mainfile.*=.*", line):
+						line = "set mainfile=" + VerifyPath(mainFileName) + "\n";
+					content += line;
+			with open(runFilePath, "w", encoding = "utf-8") as f:
+				f.write(content);
+		# 运行run.bat文件
+		os.system(" ".join(["start", os.path.abspath(runFilePath)]));
 		pass;
 
 	def createDescription(self):
