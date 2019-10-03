@@ -138,15 +138,17 @@ class MainViewUI(wx.ScrolledWindow):
 		toolPath = GetPathByRelativePath("../", self._curPath);
 		mainFileName = self.getFile(toolPath, "main");
 		# 更新run.bat文件
-		runFilePath = VerifyPath(os.path.join(toolPath, "run.bat"));
+		runFilePath = VerifyPath(os.path.join(toolPath, "run", "run.bat"));
 		if os.path.exists(runFilePath):
 			content = "";
 			with open(runFilePath, "r", encoding = "utf-8") as f:
 				for line in f.readlines():
 					if re.search("set pyexe.*=.*", line):
 						line = "set pyexe=" + VerifyPath(pyExe) + "\n";
-					elif re.search("set pjfile.*=.*", line):
-						line = "set pjfile=" + VerifyPath(toolPath) + "\n";
+					elif re.search("set toolpath.*=.*", line):
+						line = "set toolpath=" + VerifyPath(toolPath) + "\n";
+					elif re.search("set pjpath.*=.*", line):
+						line = "set pjpath=" + VerifyPath(_GG("g_ProjectPath")) + "\n";
 					elif re.search("set mainfile.*=.*", line):
 						line = "set mainfile=" + VerifyPath(mainFileName) + "\n";
 					content += line;
