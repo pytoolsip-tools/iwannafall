@@ -22,26 +22,14 @@ class EVENT_ID(Enum):
 	def getNewId():
 		return getNewEventId();
 
-	TO_UPDATE_VIEW = getNewEventId(); # 创建事件Id的标准样式
+	K_ESC = getNewEventId(); # ESC按键事件
+
+	K_SPACE = getNewEventId(); # 空格按键事件
 	
-	UPDATE_TREE_ITEMS = getNewEventId(); # 更新树状Items事件
+	K_LEFT = getNewEventId(); # 左按键事件
 
-	UPDATE_WINDOW_RIGHT_VIEW = getNewEventId(); # 更新右窗口视图
+	K_UP = getNewEventId(); # 上按键事件
 
-	SHOW_SEARCH_PANEL_EVENT = getNewEventId(); # 显示搜索面板事件
-
-	ESC_DOWN_EVENT = getNewEventId(); # ESC按键事件
+	K_RIGHT = getNewEventId(); # 右按键事件
 	
-	STOP_APP_EVENT = getNewEventId(); # 停止APP事件
-
-	RESTART_APP_EVENT = getNewEventId(); # 重启APP事件
-
-	ADD_LAUNCHER_EVENT = getNewEventId(); # 添加启动事件
-
-	LOGIN_SUCCESS_EVENT = getNewEventId(); # 登录成功事件
-
-	UPDATE_WINDOW_LEFT_VIEW = getNewEventId(); # 更新左窗口视图
-	
-	LOGOUT_SUCCESS_EVENT = getNewEventId(); # 注销成功事件
-
-	UPDATE_APP_EVENT = getNewEventId(); # 更新APP事件
+	K_DOWN = getNewEventId(); # 下按键事件

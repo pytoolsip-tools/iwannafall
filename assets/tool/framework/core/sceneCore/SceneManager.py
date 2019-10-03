@@ -4,6 +4,8 @@ import pygame;
 from _Global import _GG;
 from function.base import *;
 
+from sceneCore.HotKeyMap import GetEventIdByPressKey;
+
 # 场景管理器
 class SceneManager(object):
     def __init__(self):
@@ -13,8 +15,10 @@ class SceneManager(object):
         self.__isRunning = False;
         self.__sceneMap = {};
         self.__runningScene = None;
+        self.__isFullScreen = False;
 
     def createScreen(self):
+        self.__isFullScreen = True;
         self.__screen = pygame.display.set_mode(_GG("GameConfig").PjConfig().Get("winSize"), flags = pygame.FULLSCREEN);
         self.__isRunning = True;
 
@@ -40,11 +44,20 @@ class SceneManager(object):
     def update(self, dt):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.display.set_mode(_GG("GameConfig").PjConfig().Get("winSize"));
+                if event.key == pygame.K_F11:
+                    self.__isFullScreen = not self.__isFullScreen;
+                    if self.__isFullScreen:
+                        pygame.display.set_mode(_GG("GameConfig").PjConfig().Get("winSize"), flags = pygame.FULLSCREEN);
+                    else:
+                        pygame.display.set_mode(_GG("GameConfig").PjConfig().Get("winSize"));
+                else:
+                    eventId = GetEventIdByPressKey(event.key);
+                    if eventId:
+                        _GG("EventDispatcher").dispatch(eventId, {});
             if event.type == pygame.QUIT:
                 self.destroyScreen();
                 return;
+        pygame.event.pump();
         if self.__runningScene and hasattr(self.__runningScene, "update"):
             self.__runningScene.update(dt);
         pygame.display.update();
