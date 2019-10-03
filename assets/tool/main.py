@@ -21,13 +21,15 @@ Loader.loadGlobalInfo();
 Loader.verifyDefaultData();
 Loader.lockGlobal();
 
-from _Global import _GG;
+SceneManager = Loader.getSceneManager();
+
+from scene.scene1 import Scene1;
+
+def initFunc():
+    SceneManager.createScene("mainScene", Scene1);
+    SceneManager.runScene("mainScene");
 
 if __name__ == '__main__':
     pygame.init();
-    pygame.display.set_mode(_GG("GameConfig").PjConfig().Get("winSize", (1080, 720)));
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit(0);
+    SceneManager.run(init = initFunc);
     pygame.quit();

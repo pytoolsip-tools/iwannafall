@@ -5,9 +5,9 @@ class Cloud(pygame.sprite.Sprite):
 	def __init__(self, params = {}):
 		self.initParams(params);
 		super(Cloud, self).__init__();
-        self.surf = pygame.Surface(self.__params["size"]);
-        self.surf.fill(self.__params["bgColor"]);
-        self.rect = self.surf.get_rect()
+		self.image = pygame.Surface(self.__params["size"]);
+		self.image.fill(self.__params["bgColor"]);
+		self.rect = self.image.get_rect()
 
 	def initParams(self, params):
 		# 初始化参数

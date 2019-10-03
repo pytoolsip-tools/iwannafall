@@ -17,7 +17,7 @@ from function.base import *;
 def GetConfigKeyMap():
 	return {
 		"Config" : _GG("g_FrameworkPath") + "config/ini/config.ini",
-		"PjConfig" : _GG("g_FrameworkPath") + "config/ini/config.json",
+		"PjConfig" : _GG("g_FrameworkPath") + "config/json/config.json",
 	};
 
 class Config(object):
