@@ -3,13 +3,6 @@ import pygame;
 from _Global import _GG;
 from function.base import *;
 
-Direction = {
-	"LEFT" : -1,
-	"UP" : -1,
-	"RIGHT" : 1,
-	"DOWN" : 1,
-};
-
 def getRegisterEventMap(G_EVENT):
 	return {
 		G_EVENT.K_SPACE : "jump",
@@ -26,6 +19,7 @@ class Guy(pygame.sprite.Sprite):
 		self.registerEventMap();
 		self.__jumpCnt = self.__params["jumpCount"]; # 跳跃次数
 		self.__speed = 0; # 自由落体速率
+		self.__walkSpeed = 0; # 移动速率
 
 	def __del__(self):
 		self.unregisterEventMap();
@@ -37,9 +31,13 @@ class Guy(pygame.sprite.Sprite):
 			"bgColor" : (255,255,255),
 			"jumpCount" : 2,
 			"gravity" : 40,
-			"factor" : 1,
+			"factor" : 100,
 			"velocity" : -12,
-			"walkSpeed" : 0.5,
+			"walk" : {
+				"acceleration" : 100, # 加速度
+				"limit" : 4, # 限速
+				"factor" : 100,
+			},
 		};
 		for k,v in params.items():
 			self.__params[k] = v;
@@ -69,7 +67,12 @@ class Guy(pygame.sprite.Sprite):
 	def isStanding(self):
 		return self.__jumpCnt == 0 and self.__speed == 0;
 
+	def stay(self):
+		self.__walkSpeed = 0;
+
 	def isStaying(self):
+		if self.__walkSpeed > 0:
+			return False;
 		pressedKey = pygame.key.get_pressed();
 		for k in [pygame.K_a, pygame.K_LEFT, pygame.K_d, pygame.K_RIGHT]:
 			if pressedKey[k]:
@@ -77,6 +80,7 @@ class Guy(pygame.sprite.Sprite):
 		return True;
 
 	def update(self, dt, sprites = []):
+		# 检测碰撞
 		isStay, isStand = self.collide(sprites);
 		if not isStay:
 			self.walk(dt);
@@ -86,14 +90,27 @@ class Guy(pygame.sprite.Sprite):
 
 	def fall(self, dt):
 		self.__speed += self.__params["gravity"] * dt/1000;
-		self.rect.move_ip((0, self.__speed*self.__params["factor"]));
+		self.rect.move_ip((0, self.__speed * self.__params["factor"] * dt/1000));
 
 	def walk(self, dt):
+		direction = 0;
+		# 判断方向事件
 		pressedKey = pygame.key.get_pressed();
 		if pressedKey[pygame.K_a] or pressedKey[pygame.K_LEFT]:
-			self.rect.move_ip((-dt * self.__params["walkSpeed"], 0));
+			direction = -1;
+			if self.__walkSpeed > 0:
+				self.stay();
 		elif pressedKey[pygame.K_d] or pressedKey[pygame.K_RIGHT]:
-			self.rect.move_ip((dt * self.__params["walkSpeed"], 0));
+			direction = 1;
+			if self.__walkSpeed < 0:
+				self.stay();
+		if direction != 0:
+			# 更新速度
+			walkParams = self.__params["walk"];
+			self.__walkSpeed += direction * walkParams["acceleration"] * dt/1000;
+			if abs(self.__walkSpeed) > walkParams["limit"]:
+				self.__walkSpeed = direction * walkParams["limit"];
+			self.rect.move_ip((self.__walkSpeed * walkParams["factor"] * dt/1000, 0));
 
 	def layout(self):
 		_GG("SceneManager").getScreen().blit(self.image, self.rect);
@@ -101,8 +118,18 @@ class Guy(pygame.sprite.Sprite):
 
 	def collide(self, sprites = []):
 		isStay, isStand = self.isStaying(), self.isStanding();
+		def updateLeft(val):
+			self.rect.left = val;
+			self.stay();
+			isStay = True;
+			pass;
+		def updateRight(val):
+			self.rect.right = val;
+			self.stay();
+			isStay = True;
+			pass;
 		def updateTop(val):
-			self.rect.top = spriteRect.bottom;
+			self.rect.top = val;
 			self.__speed = 0;
 			pass;
 		def updateBottom(val):
@@ -114,25 +141,23 @@ class Guy(pygame.sprite.Sprite):
 			spriteRect = sprite.rect;
 			# 存在8种碰撞情况
 			if self.rect.left <= spriteRect.left <= self.rect.right:
-				diffX, diffY = self.rect.right - spriteRect.left, self.rect.width;
+				diffX = self.rect.right - spriteRect.left;
 				# 3种情况
 				if self.rect.top <= spriteRect.top and diffX >= self.rect.bottom - spriteRect.top:
 					updateBottom(spriteRect.top);
 				elif self.rect.bottom >= spriteRect.bottom and diffX >= spriteRect.bottom - self.rect.top:
 					updateTop(spriteRect.bottom);
 				else:
-					self.rect.right = spriteRect.left;
-					isStay = True;
+					updateRight(spriteRect.left);
 			elif self.rect.left <= spriteRect.right <= self.rect.right:
-				diffX, diffY = spriteRect.right - self.rect.left, self.rect.width;
+				diffX = spriteRect.right - self.rect.left;
 				# 3种情况
 				if self.rect.top <= spriteRect.top and diffX >= self.rect.bottom - spriteRect.top:
 					updateBottom(spriteRect.top);
 				elif self.rect.bottom >= spriteRect.bottom and diffX >= spriteRect.bottom - self.rect.top:
 					updateTop(spriteRect.bottom);
 				else:
-					self.rect.left = spriteRect.right;
-					isStay = True;
+					updateLeft(spriteRect.right);
 			elif self.rect.top <= spriteRect.top <= self.rect.bottom: # 1种情况
 				updateBottom(spriteRect.top);
 			elif self.rect.top <= spriteRect.bottom <= self.rect.bottom: # 1种情况
