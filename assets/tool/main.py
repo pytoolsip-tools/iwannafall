@@ -31,5 +31,10 @@ def initFunc():
 
 if __name__ == '__main__':
     pygame.init();
+    # 初始化手柄事件
+    for i in range(pygame.joystick.get_count()):
+        joystick = pygame.joystick.Joystick(i);
+        joystick.init();
+    # 运行场景
     SceneManager.run(init = initFunc);
     pygame.quit();

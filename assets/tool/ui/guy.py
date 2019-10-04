@@ -1,3 +1,4 @@
+import math;
 import pygame;
 
 from _Global import _GG;
@@ -6,6 +7,7 @@ from function.base import *;
 def getRegisterEventMap(G_EVENT):
 	return {
 		G_EVENT.K_SPACE : "jump",
+		G_EVENT.JOYBUTTONDOWN : "checkJump",
 	};
 
 class Guy(pygame.sprite.Sprite):
@@ -17,6 +19,7 @@ class Guy(pygame.sprite.Sprite):
 		self.image.fill(self.__params["bgColor"]);
 		self.rect = self.image.get_rect()
 		self.registerEventMap();
+		self.__id = self.__params["id"];
 		self.__jumpCnt = self.__params["jumpCount"]; # 跳跃次数
 		self.__speed = 0; # 自由落体速率
 		self.__walkSpeed = 0; # 移动速率
@@ -27,6 +30,7 @@ class Guy(pygame.sprite.Sprite):
 	def initParams(self, params):
 		# 初始化参数
 		self.__params = {
+			"id" : 0,
 			"size" : (25, 25),
 			"bgColor" : (255,255,255),
 			"jumpCount" : 2,
@@ -38,6 +42,7 @@ class Guy(pygame.sprite.Sprite):
 				"limit" : 4, # 限速
 				"factor" : 100,
 			},
+			"axisError" : 0.01,
 		};
 		for k,v in params.items():
 			self.__params[k] = v;
@@ -73,10 +78,17 @@ class Guy(pygame.sprite.Sprite):
 	def isStaying(self):
 		if self.__walkSpeed > 0:
 			return False;
+		# 判断键盘事件
 		pressedKey = pygame.key.get_pressed();
 		for k in [pygame.K_a, pygame.K_LEFT, pygame.K_d, pygame.K_RIGHT]:
 			if pressedKey[k]:
 				return False;
+		# 判断手柄位移
+		if self.__id < pygame.joystick.get_count():
+			joystick = pygame.joystick.Joystick(self.__id);
+			if joystick.get_numaxes() > 0:
+				if math.fabs(joystick.get_axis(0)) > self.__params["axisError"]: # 抖动误差值
+					return False;
 		return True;
 
 	def update(self, dt, sprites = []):
@@ -93,17 +105,16 @@ class Guy(pygame.sprite.Sprite):
 		self.rect.move_ip((0, self.__speed * self.__params["factor"] * dt/1000));
 
 	def walk(self, dt):
-		direction = 0;
+		direction = self.getDirection();
 		# 判断方向事件
-		pressedKey = pygame.key.get_pressed();
-		if pressedKey[pygame.K_a] or pressedKey[pygame.K_LEFT]:
-			direction = -1;
+		if direction == -1:
 			if self.__walkSpeed > 0:
 				self.stay();
-		elif pressedKey[pygame.K_d] or pressedKey[pygame.K_RIGHT]:
-			direction = 1;
+		elif direction == 1:
 			if self.__walkSpeed < 0:
 				self.stay();
+		else:
+			self.stay();
 		if direction != 0:
 			# 更新速度
 			walkParams = self.__params["walk"];
@@ -163,4 +174,27 @@ class Guy(pygame.sprite.Sprite):
 			elif self.rect.top <= spriteRect.bottom <= self.rect.bottom: # 1种情况
 				updateTop(spriteRect.bottom);
 		return isStay, isStand;
-		
+
+	def getDirection(self):
+		# 检测键盘按键
+		pressedKey = pygame.key.get_pressed();
+		if pressedKey[pygame.K_a] or pressedKey[pygame.K_LEFT]:
+			return -1;
+		elif pressedKey[pygame.K_d] or pressedKey[pygame.K_RIGHT]:
+			return 1;
+		# 检测手柄
+		if self.__id < pygame.joystick.get_count():
+			joystick = pygame.joystick.Joystick(self.__id);
+			if joystick.get_numaxes() > 0:
+				axis = joystick.get_axis(0);
+				if math.fabs(axis) > self.__params["axisError"]: # 抖动误差值
+					return axis < 0 and -1 or 1;
+		return 0;
+
+	def checkJump(self, data = {}):
+		if self.__id < pygame.joystick.get_count():
+			joystick = pygame.joystick.Joystick(self.__id);
+			if joystick.get_numbuttons() > 0:
+				if joystick.get_button(0) == 1:
+					self.jump();
+		pass;

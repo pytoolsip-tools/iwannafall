@@ -33,3 +33,13 @@ class EVENT_ID(Enum):
 	K_RIGHT = getNewEventId(); # 右按键事件
 	
 	K_DOWN = getNewEventId(); # 下按键事件
+
+	JOYAXISMOTION = getNewEventId(); # 手柄摇杆事件
+
+	JOYBALLMOTION = getNewEventId(); # 手柄追踪球事件
+
+	JOYBUTTONDOWN = getNewEventId(); # 手柄按下按钮事件
+
+	JOYBUTTONUP = getNewEventId(); # 手柄松开按钮事件
+
+	JOYHATMOTION = getNewEventId(); # 手柄键帽事件

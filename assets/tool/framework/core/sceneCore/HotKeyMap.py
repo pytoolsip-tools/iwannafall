@@ -11,10 +11,25 @@ __hot_key_map = {
     # pygame.K_DOWN   : "K_DOWN",
 };
 
+__hot_type_map = {
+    # pygame.JOYAXISMOTION : "JOYAXISMOTION",
+    # pygame.JOYBALLMOTION : "JOYBALLMOTION",
+    pygame.JOYBUTTONDOWN : "JOYBUTTONDOWN",
+    # pygame.JOYBUTTONUP : "JOYBUTTONUP",
+    # pygame.JOYHATMOTION : "JOYHATMOTION",
+};
+
 # 根据按键类型，获取事件ID
-def GetEventIdByPressKey(key):
+def GetEventIdByEventKey(key):
     if key in __hot_key_map:
         eKey = __hot_key_map[key];
         if hasattr(_GG("EVENT_ID"), eKey):
             return getattr(_GG("EVENT_ID"), eKey);
+    return None;
+
+def GetEventIdByEventType(key):
+    if key in __hot_type_map:
+        tKey = __hot_type_map[key];
+        if hasattr(_GG("EVENT_ID"), tKey):
+            return getattr(_GG("EVENT_ID"), tKey);
     return None;
