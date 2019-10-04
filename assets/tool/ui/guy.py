@@ -20,7 +20,7 @@ class Guy(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.registerEventMap();
 		self.__id = self.__params["id"];
-		self.__jumpCnt = self.__params["jumpCount"]; # 跳跃次数
+		self.__jumpCnt = self.__params["jump"]["count"]; # 跳跃次数
 		self.__speed = 0; # 自由落体速率
 		self.__walkSpeed = 0; # 移动速率
 
@@ -33,10 +33,13 @@ class Guy(pygame.sprite.Sprite):
 			"id" : 0,
 			"size" : (25, 25),
 			"bgColor" : (255,255,255),
-			"jumpCount" : 2,
-			"gravity" : 40,
-			"factor" : 100,
-			"velocity" : -12,
+			"jump" : {
+				"count" : 2,
+				"gravity" : 40,
+				"factor" : 100,
+				"velocity" : -12,
+				"limit" : 16,
+			},
 			"walk" : {
 				"acceleration" : 100, # 加速度
 				"limit" : 4, # 限速
@@ -58,11 +61,12 @@ class Guy(pygame.sprite.Sprite):
 			_GG("EventDispatcher").unregister(eventId, self, callbackName);
 
 	def jump(self, data = {}):
-		if self.__jumpCnt >= self.__params["jumpCount"]:
+		jumpParams = self.__params["jump"];
+		if self.__jumpCnt >= jumpParams["count"]:
 			return;
 		self.__jumpCnt += 1;
-		self.__speed = self.__params["velocity"];
-		self.rect.move_ip((0, self.__params["velocity"]));
+		self.__speed = jumpParams["velocity"];
+		self.rect.move_ip((0, jumpParams["velocity"]));
 		self.layout();
 
 	def stand(self):
@@ -93,16 +97,18 @@ class Guy(pygame.sprite.Sprite):
 
 	def update(self, dt, sprites = []):
 		# 检测碰撞
-		isStay, isStand = self.collide(sprites);
+		isStay = self.collide(sprites);
 		if not isStay:
 			self.walk(dt);
-		if not isStand:
-			self.fall(dt);
+		self.fall(dt);
 		pass;
 
 	def fall(self, dt):
-		self.__speed += self.__params["gravity"] * dt/1000;
-		self.rect.move_ip((0, self.__speed * self.__params["factor"] * dt/1000));
+		jumpParams = self.__params["jump"];
+		self.__speed += jumpParams["gravity"] * dt/1000;
+		if math.fabs(self.__speed) > jumpParams["limit"]:
+			self.__speed = self.__speed / math.fabs(self.__speed) * jumpParams["limit"];
+		self.rect.move_ip((0, self.__speed * jumpParams["factor"] * dt/1000));
 
 	def walk(self, dt):
 		direction = self.getDirection();
@@ -119,7 +125,7 @@ class Guy(pygame.sprite.Sprite):
 			# 更新速度
 			walkParams = self.__params["walk"];
 			self.__walkSpeed += direction * walkParams["acceleration"] * dt/1000;
-			if abs(self.__walkSpeed) > walkParams["limit"]:
+			if math.fabs(self.__walkSpeed) > walkParams["limit"]:
 				self.__walkSpeed = direction * walkParams["limit"];
 			self.rect.move_ip((self.__walkSpeed * walkParams["factor"] * dt/1000, 0));
 
@@ -128,16 +134,16 @@ class Guy(pygame.sprite.Sprite):
 		pass;
 
 	def collide(self, sprites = []):
-		isStay, isStand = self.isStaying(), self.isStanding();
+		result = {"isStay" : self.isStaying()};
 		def updateLeft(val):
 			self.rect.left = val;
 			self.stay();
-			isStay = True;
+			result["isStay"] = True;
 			pass;
 		def updateRight(val):
 			self.rect.right = val;
 			self.stay();
-			isStay = True;
+			result["isStay"] = True;
 			pass;
 		def updateTop(val):
 			self.rect.top = val;
@@ -146,7 +152,6 @@ class Guy(pygame.sprite.Sprite):
 		def updateBottom(val):
 			self.rect.bottom = val;
 			self.stand();
-			isStand = True;
 			pass;
 		for sprite in sprites:
 			spriteRect = sprite.rect;
@@ -173,7 +178,7 @@ class Guy(pygame.sprite.Sprite):
 				updateBottom(spriteRect.top);
 			elif self.rect.top <= spriteRect.bottom <= self.rect.bottom: # 1种情况
 				updateTop(spriteRect.bottom);
-		return isStay, isStand;
+		return result["isStay"];
 
 	def getDirection(self):
 		# 检测键盘按键
