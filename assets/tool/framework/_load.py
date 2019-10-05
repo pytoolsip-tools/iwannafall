@@ -25,6 +25,9 @@ try:
 	from logCore.Logger import Logger;
 	from cacheCore.CacheManager import CacheManager;
 	from sceneCore.SceneManager import SceneManager;
+	from timerCore.TimerManager import TimerManager;
+	from sceneCore.Scene import BaseScene;
+	from viewCore.View import BaseView;
 
 except Exception as e:
 	raise e;
@@ -85,6 +88,7 @@ class Loader(object):
 		_G.setGlobalVarTo_Global("EVENT_ID", EVENT_ID); # 设置事件枚举Id的全局变量
 		_G.setGlobalVarTo_Global("CacheManager", CacheManager()); # 设置缓存管理器的全局变量
 		_G.setGlobalVarTo_Global("SceneManager", SceneManager()); # 设置场景管理器的全局变量
+		_G.setGlobalVarTo_Global("TimerManager", TimerManager()); # 设置定时器管理器的全局变量
 		pass;
 
 	# 加载全局配置变量
@@ -101,6 +105,8 @@ class Loader(object):
 		pass;
 
 	def loadGClass(self):
+		_G.setGlobalVarTo_Global("BaseScene", BaseScene); # 设置基础场景的全局变量
+		_G.setGlobalVarTo_Global("BaseView", BaseView); # 设置基础视图的全局变量
 		self.loadLogger(); # 加载日志类变量
 		pass;
 

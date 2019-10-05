@@ -24,6 +24,9 @@ class SceneManager(object):
 
     def getScreen(self):
         return self.__screen;
+        
+    def getScreenSize(self):
+        return self.__screen.get_size();
 
     def isRunning(self):
         return self.__isRunning;
@@ -61,8 +64,15 @@ class SceneManager(object):
                 self.destroyScreen();
                 return;
         pygame.event.pump();
-        if self.__runningScene and hasattr(self.__runningScene, "update"):
-            self.__runningScene.update(dt);
+        # 执行定时器的update方法
+        _GG("TimerManager").update(dt);
+        # 执行场景的update方法
+        if self.__runningScene:
+            try:
+                self.__runningScene(dt);
+                self.getScreen().blit(self.__runningScene.surf, (0, 0)); # 更新场景
+            except Exception as e:
+                _GG("Log").e(f"Error to run Scene! Err[{e}]");
         pygame.display.update();
 
     def createScene(self, name, sceneObj, *argList, **argDict):
@@ -70,12 +80,9 @@ class SceneManager(object):
         if name in self.__sceneMap:
             _GG("Log").e(f"Error to create Scene! Err[Existed scene named '{name}'!]");
             return scene;
-        try:
-            scene = sceneObj(*argList, **argDict);
-            scene._scene_name_ = name;
-            self.__sceneMap[name] = scene;
-        except Exception as e:
-            _GG("Log").e(f"Error to create Scene! Err[{e}]");
+        scene = sceneObj(self.getScreenSize(), *argList, **argDict);
+        scene._scene_name_ = name;
+        self.__sceneMap[name] = scene;
         return scene;
 
     def runScene(self, name):
