@@ -61,8 +61,12 @@ def onUpdate(view, dt):
 					view.rect.center = view.m_rotatePos;
 
 		# 销毁view
-		if updateParams.get("kill", "") == "top":
+		killStr = updateParams.get("kill", "");
+		if killStr == "top":
 			if view.rect.top <= -view.rect.height:
+				view.kill();
+		elif killStr == "bottom":
+			if view.rect.bottom >= view.rect.bottom + view.rect.height:
 				view.kill();
 
 SpriteConfig = {
@@ -83,6 +87,7 @@ SpriteConfig = {
 		{"pos" : (1800, 176), "size" : (40, 904)}, # 右部
 	],
 	"splinter" : [
+		# 左 第一行
 		{
 			"pos" : (600, 136), "size" : (80, 40),
 		},
@@ -96,6 +101,7 @@ SpriteConfig = {
 			"onTrigger" : onTrigger,
 			"onUpdate" : onUpdate,
 		},
+		# 右 第二行
 		{
 			"pos" : (680, 352), "size" : (80, 40),
 		},
@@ -103,7 +109,7 @@ SpriteConfig = {
 			"pos" : (60, 352), "size" : (80, 40),
 			"update" : {
 				"type" : "move",
-				"speed" : [800, 0],
+				"speed" : [700, 0],
 				"return" : (60, 460, -1, -1),
 			},
 			"onUpdate" : onUpdate,
@@ -112,17 +118,91 @@ SpriteConfig = {
 			"pos" : (460, 352), "size" : (80, 40),
 			"update" : {
 				"type" : "move",
-				"speed" : [-800, 0],
+				"speed" : [-700, 0],
 				"return" : (60, 460, -1, -1),
 			},
 			"onUpdate" : onUpdate,
 		},
+		# 右 第三行
 		{
-			"pos" : (880, 352), "size" : (40, 40),
+			"pos" : (200, 568), "size" : (120, 40),
+		},
+		{
+			"pos" : (440, 568), "size" : (80, 40),
+		},
+		# 右 第四行
+		{
+			"pos" : (320, 648), "size" : (120, 40), "rotate" : 180,
+			"trigger" : (840, 96, 40, 80),
+			"update" : {
+				"type" : "move",
+				"speed" : [0, 1000],
+				"kill" : "bottom",
+			},
+			"onTrigger" : onTrigger,
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (480, 784), "size" : (120, 40),
+			"trigger" : (480, 432, 80, 140),
+			"update" : {
+				"type" : "move",
+				"speed" : [0, -1000],
+				"kill" : "top",
+			},
+			"onTrigger" : onTrigger,
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (260, 784), "size" : (120, 40),
+		},
+		# 右 第五行
+		{
+			"pos" : (0, 1000), "size" : (40, 40), "visible" : False,
+			"trigger" : (0, 900, 40, 80),
+			"update" : {
+				"visible" : True,
+			},
+			"onTrigger" : onTrigger,
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (260, 1000), "size" : (120, 40),
+		},
+		# 中间 旋转
+		{
+			"pos" : (750, 864), "size" : (40, 40),
 			"update" : {
 				"type" : "rotate",
-				"anchor" : (400, 352),
-				"speed" : 1000,
+				"anchor" : (900, 884),
+				"speed" : -320,
+			},
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (1010, 864), "size" : (40, 40),
+			"update" : {
+				"type" : "rotate",
+				"anchor" : (900, 884),
+				"speed" : -320,
+			},
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (880, 734), "size" : (40, 40),
+			"update" : {
+				"type" : "rotate",
+				"anchor" : (900, 884),
+				"speed" : -320,
+			},
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (880, 994), "size" : (40, 40),
+			"update" : {
+				"type" : "rotate",
+				"anchor" : (900, 884),
+				"speed" : -320,
 			},
 			"onUpdate" : onUpdate,
 		},
