@@ -155,6 +155,12 @@ SpriteConfig = {
 		},
 		{
 			"pos" : (260, 784), "size" : (120, 40),
+			"update" : {
+				"type" : "move",
+				"speed" : [-600, 0],
+				"return" : (120, 360, -1, -1),
+			},
+			"onUpdate" : onUpdate,
 		},
 		# 右 第五行
 		{
