@@ -5,14 +5,13 @@ class BaseView(pygame.sprite.Sprite):
     def __init__(self, params = {}):
         super(BaseView, self).__init__();
         self.__initParams__(params);
-        self.__surf = pygame.Surface(self.__params["size"]);
-        self.__surf.fill(self.__params["bgColor"]);
-        self.rect = self.__surf.get_rect();
+        self.surf = pygame.Surface(self.__params["size"]);
+        self.surf.fill(self.__params["bgColor"]);
         self.__parent = None;
         self.__children = [];
         self.__tempGroups = [];
+        self.__rotate = 0;
         self.visible = self.__params["visible"];
-        self.anchor = self.__params["anchor"];
         self.pos = self.__params["pos"];
         self.scale = self.__params["scale"];
         self.rotate = self.__params["rotate"];
@@ -25,7 +24,6 @@ class BaseView(pygame.sprite.Sprite):
             "size" : (25, 25),
             "bgColor" : (255,255,255),
             "visible" : True,
-            "anchor" : (0, 0),
             "scale" : (1, 1),
             "rotate" : 0,
             "background" : None,
@@ -70,10 +68,13 @@ class BaseView(pygame.sprite.Sprite):
 
     @surf.setter
     def surf(self, surf):
-        topleft = self.rect.topleft;
         self.__surf = surf;
-        self.rect = self.__surf.get_rect();
-        self.rect.topleft = topleft;
+        self.__oriSurf = surf;
+        self.rect = surf.get_rect();
+
+    @property
+    def oriSurf(self):
+        return self.__oriSurf;
 
     @property
     def image(self):
@@ -84,24 +85,12 @@ class BaseView(pygame.sprite.Sprite):
         return self.__children;
 
     @property
-    def anchor(self):
-        return self.__anchor;
-
-    @anchor.setter
-    def anchor(self, anchor):
-        if isinstance(anchor, int) or isinstance(anchor, float):
-            anchor = (anchor, anchor);
-        if (isinstance(anchor, list) or isinstance(anchor, tuple)) and len(anchor) == 2:
-            self.__anchor = (anchor[0], anchor[1]);
-
-    @property
     def pos(self):
-        return (self.rect.left + self.__anchor[0] * self.rect.width, self.rect.top + self.__anchor[1] * self.rect.height);
+        return self.rect.topleft;
 
     @pos.setter
     def pos(self, pos):
-        if (isinstance(pos, list) or isinstance(pos, tuple)) and len(pos) == 2:
-            self.rect.topleft = (pos[0] - self.__anchor[0] * self.rect.width, pos[1] - self.__anchor[1] * self.rect.height);
+        self.rect.topleft = pos;
 
     @property
     def size(self):
@@ -110,9 +99,7 @@ class BaseView(pygame.sprite.Sprite):
     @size.setter
     def size(self, size):
         if (isinstance(size, list) or isinstance(size, tuple)) and len(size) == 2:
-            pos = self.pos;
             self.rect.width, self.rect.height = size[0], size[1];
-            self.pos = pos;
 
     @property
     def scale(self):
@@ -124,10 +111,8 @@ class BaseView(pygame.sprite.Sprite):
             scale = (scale, scale);
         if (isinstance(scale, list) or isinstance(scale, tuple)) and len(scale) < 2:
             return;
-        pos = self.pos;
         x, y = scale[0], scale[1];
-        self.surf = pygame.transform.scale(self.surf, (int(x * self.rect.width), int(y * self.rect.height)));
-        self.pos = pos;
+        self.updateSurf(pygame.transform.scale(self.__oriSurf, (int(x * self.rect.width), int(y * self.rect.height))));
         self.__scale = (x, y);
 
     @property
@@ -136,12 +121,11 @@ class BaseView(pygame.sprite.Sprite):
 
     @rotate.setter
     def rotate(self, angle):
-        if not isinstance(angle, int):
+        if not (isinstance(angle, int) or isinstance(angle, float)):
             return;
-        pos = self.pos;
-        self.surf = pygame.transform.rotate(self.surf, angle);
-        self.pos = pos;
-        self.__rotate = angle;
+        angle %= 360;
+        self.updateSurf(pygame.transform.rotate(self.__oriSurf, int(angle)));
+        self.__rotate = int(angle);
 
     @property
     def background(self):
@@ -150,6 +134,15 @@ class BaseView(pygame.sprite.Sprite):
     @background.setter
     def background(self, bg):
         self.__background = bg;
+
+    def updateSurf(self, surf):
+        self.__surf = surf;
+        self.rect = surf.get_rect(center = self.rect.center);
+
+    def rotateBy(self, angle):
+        if not (isinstance(angle, int) or isinstance(angle, float)):
+            return;
+        self.rotate = angle + self.__rotate;
 
     def clearTempGroups(self):
         self.__tempGroups = [];
