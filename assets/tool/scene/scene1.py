@@ -5,6 +5,49 @@ from function.base import *;
 
 from ui import *;
 
+def onTrigger(view):
+	if not hasattr(view, "m_isTriggered") or not view.m_isTriggered:
+		view.m_isTriggered = True;
+		updateParams = view.params.get("update", {});
+		# 显示view
+		if "visible" in updateParams:
+			view.visible = updateParams["visible"];
+		# 移动view
+		if "offset" in updateParams:
+			offsetX, offsetY = updateParams["offset"];
+			view.rect.move_ip((offsetX, offsetY));
+
+def onUpdate(view, dt):
+	isUpdate = True;
+	if view.params["trigger"]:
+		isUpdate = hasattr(view, "m_isTriggered") and view.m_isTriggered or False;
+	if isUpdate:
+		updateParams = view.params.get("update", {});
+		updateType = updateParams.get("type", "");
+		# 移动view
+		if updateType == "move":
+			if "speed" in updateParams:
+				speedX, speedY = updateParams["speed"];
+				view.rect.move_ip((speedX * dt/1000, speedY * dt/1000));
+				if "return" in updateParams:
+					x0, x1, y0, y1 = updateParams["return"];
+					if 0 <= view.rect.left < x0:
+						view.rect.left = x0;
+						updateParams["speed"][0] = -updateParams["speed"][0];
+					elif 0 <= x1 < view.rect.left:
+						view.rect.left = x1;
+						updateParams["speed"][0] = -updateParams["speed"][0];
+					if 0 <= view.rect.top < y0:
+						view.rect.top = y0;
+						updateParams["speed"][1] = -updateParams["speed"][1];
+					elif 0 <= y1 < view.rect.top:
+						view.rect.top = y1;
+						updateParams["speed"][1] = -updateParams["speed"][1];
+		# 销毁view
+		if updateParams.get("kill", "") == "top":
+			if view.rect.top <= -view.rect.height:
+				view.kill();
+
 SpriteConfig = {
 	"guy" : [
 		{"pos" : (0, 0), "size" : (40, 40)}
@@ -24,40 +67,63 @@ SpriteConfig = {
 	],
 	"splinter" : [
 		{
-			"pos" : (200, 136), "size" : (40, 40), "visible" : False,
-			# "trigger" : (1840, 200, 80, 40),
-			# "anim" : {
-			# 	"type" : "move",
-			# 	"speed" : (0, -1000),
-			# },
-			# "kill" : "top",
+			"pos" : (600, 136), "size" : (80, 40),
 		},
 		{
-			"pos" : (880, 136), "size" : (40, 40),
+			"pos" : (880, 56), "size" : (40, 80), "visible" : False,
 			"trigger" : (840, 96, 40, 80),
-			# "anim" : {
-			# 	"type" : "move",
-			# 	"speed" : (0, -1000),
-			# },
-			# "kill" : "top",
+			"update" : {
+				"visible" : True,
+				"offset" : (-40, 0),
+			},
+			"onTrigger" : onTrigger,
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (680, 352), "size" : (80, 40),
+		},
+		{
+			"pos" : (60, 352), "size" : (80, 40),
+			"update" : {
+				"type" : "move",
+				"speed" : [800, 0],
+				"return" : (60, 460, -1, -1),
+			},
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (460, 352), "size" : (80, 40),
+			"update" : {
+				"type" : "move",
+				"speed" : [-800, 0],
+				"return" : (60, 460, -1, -1),
+			},
+			"onUpdate" : onUpdate,
+		},
+		{
+			"pos" : (880, 352), "size" : (80, 40), "anchor" : (0.5, 0.5), 
 		},
 		# {
 		# 	"pos" : (1880, 1080), "size" : (40, 40),
 		# 	"trigger" : (1840, 200, 80, 40),
-		# 	"anim" : {
+		# 	"update" : {
 		# 		"type" : "move",
-		# 		"speed" : (0, -1000),
+		# 		"speed" : [0, -1000],
+		# 		"kill" : "top",
 		# 	},
-		# 	"kill" : "top",
+		# 	"onTrigger" : onTrigger,
+		# 	"onUpdate" : onUpdate,
 		# },
 		# {
 		# 	"pos" : (1840, 1080), "size" : (40, 40),
 		# 	"trigger" : (1840, 800, 80, 40),
-		# 	"anim" : {
+		# 	"update" : {
 		# 		"type" : "move",
-		# 		"speed" : (0, -1000),
+		# 		"speed" : [0, -1000],
+		# 		"kill" : "top",
 		# 	},
-		# 	"kill" : "top",
+		# 	"onTrigger" : onTrigger,
+		# 	"onUpdate" : onUpdate,
 		# },
 	],
 };
@@ -70,6 +136,7 @@ class Scene1(_GG("BaseScene")):
 		self.__sprites = pygame.sprite.Group();
 		self.__clouds = pygame.sprite.Group();
 		self.__splinters = pygame.sprite.Group();
+		self.__splinterList = [];
 		self.create();
 
 	def create(self):
@@ -93,14 +160,15 @@ class Scene1(_GG("BaseScene")):
 			self.addChild(splinter);
 			self.__splinters.add(splinter);
 			self.__sprites.add(splinter);
+			self.__splinterList.append(splinter);
 		pass;
 
 	def start(self):
 		pass;
 
 	def update(self, dt):
-		for splinter in self.__splinters.sprites():
-			splinter.onTrigger([guy.rect.topleft for guy in self.__guys.sprites()]);
+		for splinter in self.__splinterList:
+			splinter.trigger([guy.rect.topleft for guy in self.__guys.sprites()]);
 		self.updateGuySprite(dt);
 		pass;
 
