@@ -1,3 +1,4 @@
+import math;
 import pygame;
 
 from _Global import _GG;
@@ -43,6 +44,22 @@ def onUpdate(view, dt):
 					elif 0 <= y1 < view.rect.top:
 						view.rect.top = y1;
 						updateParams["speed"][1] = -updateParams["speed"][1];
+		elif updateType == "rotate":
+			if "speed" in updateParams:
+				rotate = updateParams["speed"] * dt/1000;
+				view.rotateBy(rotate);
+				if "anchor" in updateParams:
+					anchor = updateParams["anchor"];
+					pos = view.rect.center;
+					if hasattr(view, "m_rotatePos"):
+						pos = view.m_rotatePos;
+					rCos, rSin = math.cos(rotate*math.pi/180), math.sin(rotate*math.pi/180);
+					anchorX = (pos[0] - anchor[0]) * rCos - (pos[1] - anchor[1]) * rSin + anchor[0];
+					anchorY = (pos[0] - anchor[0]) * rSin + (pos[1] - anchor[1]) * rCos + anchor[1];
+					# 更细位置
+					view.m_rotatePos = (anchorX, anchorY);
+					view.rect.center = view.m_rotatePos;
+
 		# 销毁view
 		if updateParams.get("kill", "") == "top":
 			if view.rect.top <= -view.rect.height:
@@ -101,7 +118,13 @@ SpriteConfig = {
 			"onUpdate" : onUpdate,
 		},
 		{
-			"pos" : (880, 352), "size" : (80, 40), "anchor" : (0.5, 0.5), 
+			"pos" : (880, 352), "size" : (40, 40),
+			"update" : {
+				"type" : "rotate",
+				"anchor" : (400, 352),
+				"speed" : 1000,
+			},
+			"onUpdate" : onUpdate,
 		},
 		# {
 		# 	"pos" : (1880, 1080), "size" : (40, 40),
