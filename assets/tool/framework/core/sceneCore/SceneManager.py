@@ -20,6 +20,7 @@ class SceneManager(object):
     def createScreen(self):
         self.__isFullScreen = True;
         self.__screen = pygame.display.set_mode(_GG("GameConfig").PjConfig().Get("winSize"), flags = pygame.FULLSCREEN);
+        pygame.display.set_caption(_GG("GameConfig").PjConfig().Get("winTitle"));
         self.__isRunning = True;
 
     def getScreen(self):

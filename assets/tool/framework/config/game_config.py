@@ -79,8 +79,8 @@ class PjConfig(object):
 	def __initConfig__(self):
 		self.__config = {};
 		if os.path.exists(self.__path):
-			with open(self.__path, "r") as f:
-				self.__config = json.loads(f.read());
+			with open(self.__path, "rb") as f:
+				self.__config = json.loads(f.read().decode("utf-8"));
 
 	def Get(self, key, defaultVal = None):
 		if isinstance(key, list):
